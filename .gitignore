@@ -1,0 +1,9 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+.omo/
+
+# OS
+.DS_Store
+Thumbs.db
