@@ -55,14 +55,20 @@ PR 分支禁止合并其他 PR 分支；本地分支允许合入所有 `pr/*`。
 
 ## Tag 与 Release
 
-Tag：`v<上游版本>-fork.<序号>`
+### Tag 命名
+
+Tag：`v<上游版本>-fork.<NNNN>`（序号固定 4 位，不足补零）
 
 | Tag | 含义 |
 |---|---|
-| `v4.1.8-fork.1` | 基于上游 v4.1.8 的第一次 fork 发布 |
-| `v4.1.8-fork.2` | 基于上游 v4.1.8 的第二次 fork 发布 |
+| `v4.1.8-fork.0001` | 基于上游 v4.1.8 的第一次 fork 发布 |
+| `v4.1.8-fork.0002` | 基于上游 v4.1.8 的第二次 fork 发布 |
 
-- 基于上游版本号 + `-fork` 后缀 + 序号，不会和上游 tag 冲突
+- 基于上游版本号 + `-fork` 后缀 + 4 位零填充序号，确保按字母排序即为时间顺序
+- 非零填充序号（`v4.1.8-fork.10`）在字母排序下会排在 `fork.1` 和 `fork.2` 之间，不要使用
+- 不会和上游 tag 冲突
+
+### Release 命名
 
 Release：`Fork v<四段版本> - <核心改动>`
 
@@ -73,3 +79,17 @@ Release：`Fork v<四段版本> - <核心改动>`
 
 - 四段版本号 `v4.1.8.1` 表示 fork 的 patch 序号
 - 后面跟本次发布的核心改动摘要
+- 建议用 `gh` 代替 `git push` 创建 tag，避免 HTTPS 网络问题
+
+### 推送 tag
+
+```bash
+# 本地打 tag
+git tag v4.1.8-fork.0001
+
+# 用 gh 推送（绕过 HTTPS 超时问题）
+gh release create v4.1.8-fork.0001 \
+  --repo <your-fork> \
+  --title "Fork v4.1.8 - <改动摘要>" \
+  --notes ""
+```
