@@ -239,7 +239,7 @@ For copy installations, refreshing requires reinstallation:
 
 ## Git Install Workflow
 
-When this repository is used as a git-backed skill source:
+### First-time setup
 
 ```bash
 # Clone the repository into the vendor directory (recommended)
@@ -249,15 +249,54 @@ cd ~/.skills/vendor/<repo-name>
 # Install a skill (symlink by default, resolves from current dir or ~/.skills/vendor/)
 ./skills/install-skill.sh --skill agent-delegation-visibility --tool opencode
 
-# Update all skills
-git pull
-./skills/verify-skills.sh
-
 # Install multiple skills
 for skill in agent-delegation-visibility skill-installation-guide; do
   ./skills/install-skill.sh --skill "$skill" --tool opencode
 done
 ```
+
+### Update vendor from remote (Git pull workflow)
+
+**This is the standard way to propagate changes to the vendor directory.** Do not copy files directly.
+
+```bash
+cd ~/.skills/vendor/<repo-name>
+git pull
+./skills/verify-skills.sh
+```
+
+Symlinked skills automatically reflect the updated content — no reinstall needed for symlink installations. For copy installations, reinstall after pulling:
+
+```bash
+cd ~/.skills/vendor/<repo-name>
+git pull
+./skills/install-skill.sh --skill <skill-name> --tool <tool> --copy
+```
+
+### Edit in dev repo → Push → Pull in vendor
+
+When you develop skills in a separate dev checkout (e.g., `~/PycharmProjects/skills`), propagate changes to vendor:
+
+1. **Push from dev repo**:
+   ```bash
+   cd ~/PycharmProjects/skills
+   git add .
+   git commit -m "update: ..."
+   git push origin master
+   ```
+
+2. **Pull in vendor directory**:
+   ```bash
+   cd ~/.skills/vendor/<repo-name>
+   git pull
+   ```
+
+3. **Verify**:
+   ```bash
+   ./skills/verify-skills.sh
+   ```
+
+This ensures the vendor directory always reflects the canonical remote state. Never edit files directly in the vendor directory — always commit and push from the dev repo, then pull in vendor.
 
 ## Packaging Rules
 
