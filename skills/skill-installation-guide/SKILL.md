@@ -292,11 +292,13 @@ First, detect which AI tool you are running in. Look for:
 
 ### 3. Determine Source Path
 
-When using symlink install, determine the source path:
+When using symlink install, always use the vendor directory:
 
-1. If user has a local checkout, use that path directly
-2. If the repo exists under `~/.skills/vendor/<repo-name>`, use that
-3. If neither, clone to `~/.skills/vendor/<repo-name>` first, then symlink from there
+1. If `~/.skills/vendor/<repo-name>` exists, use that
+2. If not, clone the repo to `~/.skills/vendor/<repo-name>` first
+3. Never symlink to arbitrary local checkouts (e.g., `~/PycharmProjects/...`) — vendor directory is the canonical source
+
+The local checkout is for development; the vendor directory is for installation.
 
 Never symlink to temporary directories (e.g., `/tmp`, `/var/folders/`). Symlinks must point to stable, persistent paths.
 
