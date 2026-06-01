@@ -12,4 +12,4 @@ cp -R skills/agent-delegation-visibility \
 
 ## 验证
 
-重新打开 Claude Code 会话后，让智能体加载 `agent-delegation-visibility`。之后在调用 sub-agent、Task 或后台代理前，应先用中文说明委派对象、目的、方式和预期结果。
+重新打开 Claude Code 会话后，让智能体加载 `agent-delegation-visibility`。之后在调用 sub-agent、Task 或后台代理前，应按 Notice Contract 用中文说明委派对象、目的、方式和预期结果；不委派时说明具体原因；多步骤任务按 `[进度] N/M ...` 输出中文进度。

@@ -31,11 +31,23 @@ ln -s "$(pwd)/skills/agent-delegation-visibility" \
 重启 OpenCode 后，让智能体加载：
 
 ```text
-使用 agent-delegation-visibility，以后调用子 agent 前先显式说明委派对象。
+使用 agent-delegation-visibility，以后调用子 agent 前遵守 Notice Contract。
 ```
 
 成功时，后续委派前应出现类似：
 
 ```text
 委派：explore，目的：查项目内实现和配置，方式：background，预期：返回文件路径和结论。
+```
+
+不委派时应出现类似：
+
+```text
+不委派：这是轻量问题，我直接回答。
+```
+
+多步骤任务应出现类似：
+
+```text
+[进度] 2/5 已完成脚本语法检查，继续验证批量安装路径。
 ```

@@ -20,4 +20,4 @@ cp -R skills/agent-delegation-visibility \
 
 ## 验证
 
-重启 Cursor 或刷新 agent 上下文后，要求智能体遵守 `agent-delegation-visibility`。如果未自动加载，手动引用该 skill 文件或把规则加入项目的 Cursor skill/command 入口。
+重启 Cursor 或刷新 agent 上下文后，要求智能体遵守 `agent-delegation-visibility` 的 Notice Contract 和 `[进度] N/M ...` 进度标记规则。若未自动加载，手动引用该 skill 文件或把规则加入项目的 Cursor skill/command 入口。

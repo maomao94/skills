@@ -14,4 +14,4 @@ cp -R skills/agent-delegation-visibility \
 
 ## 验证
 
-刷新 Gemini CLI 会话后，让智能体按 `agent-delegation-visibility` 规则执行：委派前说明，回收后台结果时说明。
+刷新 Gemini CLI 会话后，让智能体按 `agent-delegation-visibility` 的 Notice Contract 执行：委派前说明，不委派时说明，回收后台结果时说明，多步骤任务按 `[进度] N/M ...` 输出中文进度。
