@@ -52,7 +52,8 @@ Default: symlink for personal workflows, copy for standalone or project distribu
 
 ## Execution Rules
 
-- First identify the target tool, install scope, install mode, and source path.
+- First identify the target skill set, target tool set, install scope, install mode, and source path.
+- If the user wants the personal skill pack installed broadly, prefer `--all-skills` and `--all-tools` over repeating per-skill commands.
 - Prefer the repository's installer script over hand-written shell commands.
 - Use absolute, stable paths for manual symlinks.
 - Never symlink to temporary directories such as `/tmp` or `/var/folders/`.
@@ -69,6 +70,9 @@ Generic installer:
 ./skills/install-skill.sh --skill <skill-name> --tool <tool> --copy
 ./skills/install-skill.sh --skill <skill-name> --tool <tool> --project /path/to/project
 ./skills/install-skill.sh --skill <skill-name> --tool <tool> --status
+./skills/install-skill.sh --all-skills --tool <tool>
+./skills/install-skill.sh --all-skills --all-tools
+./skills/install-skill.sh --all-skills --all-tools --project /path/to/project
 ```
 
 Verification:

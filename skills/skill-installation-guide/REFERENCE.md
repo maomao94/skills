@@ -118,6 +118,15 @@ Basic usage:
 
 # Uninstall a skill
 ./skills/install-skill.sh --skill <skill-name> --tool <tool> --uninstall
+
+# Install all skills to one tool
+./skills/install-skill.sh --all-skills --tool opencode
+
+# Install all skills to all user-level tools
+./skills/install-skill.sh --all-skills --all-tools
+
+# Install all skills to all supported project-level tool directories
+./skills/install-skill.sh --all-skills --all-tools --project /path/to/project
 ```
 
 Supported `--tool` values:
@@ -192,11 +201,13 @@ When helping users install skills:
 
 1. Detect the target AI tool from explicit user wording or project/user directories.
 2. Decide user-level vs project-level install.
-3. Decide symlink vs copy.
-4. Resolve a stable source path, preferably under `~/.skills/vendor/<repo-name>`.
-5. Run or provide the install command.
-6. Verify the install.
-7. Explain whether editor restart/reload may be needed.
+3. Decide one skill vs all skills.
+4. Decide one tool vs all tools.
+5. Decide symlink vs copy.
+6. Resolve a stable source path, preferably under `~/.skills/vendor/<repo-name>`.
+7. Run or provide the install command.
+8. Verify the install.
+9. Explain whether editor restart/reload may be needed.
 
 Signals for tool detection:
 
