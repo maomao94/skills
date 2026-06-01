@@ -10,7 +10,16 @@ description: Fork 仓库协作规范：PR 分支命名、职责隔离、合并�
 - PR 分支不写版本号——版本由合并时选的 target branch 决定
 - PR 分支只做一件事，一个 commit，不允许交叉合并其他 PR 分支
 - 不在 PR 分支上做合并——合并只在本地分支上进行
-- merge 错方向立即 `reset --hard` 回退，不要带错继续
+- merge 错方向先停止，不要带错继续；如需 `reset --hard`，必须先确认用户授权
+- 涉及 `reset --hard`、`branch -D`、强推等破坏性操作时，必须先确认用户授权
+
+## 使用本 skill 时
+
+- 先判断用户是在处理上游 PR、本地 fork 集成，还是 fork 版本发布
+- 提 PR 时优先保护 PR 分支纯净：一个功能、一个分支、不要混入其他 PR 改动
+- 发布 fork 版本时，Tag 是机器使用的版本坐标，Release 是人看的说明页
+- Go 项目必须优先保证 tag 符合 semver；release 标题不参与 Go modules 解析
+- 如果用户混淆 tag 和 release，先解释两者关系，再给具体命名和命令
 
 ## 分支命名
 
@@ -41,55 +50,71 @@ PR 分支禁止合并其他 PR 分支；本地分支允许合入所有 `pr/*`。
 合并方向检查：
 - 合并前确认：从哪个分支合并到哪个分支
 - PR 分支之间禁止互相合并
-- 合并错方向 → `git reset --hard HEAD~1` 回退
+- 合并仍在进行中 → 优先 `git merge --abort`
+- merge commit 已生成 → 先解释风险，用户确认后再考虑 `git reset --hard HEAD~1`
 
 ## 回退操作
 
-| 场景 | 命令 |
-|---|---|
-| 撤销 merge commit | `git reset --hard HEAD~1` |
-| 放弃进行中的 merge | `git merge --abort` |
-| 重置当前分支到另一个分支 | `git reset --hard <branch>` |
-| 从 commit 创建新分支 | `git branch <new> <commit>` |
-| 强制删本地分支 | `git branch -D <branch>` |
+| 场景 | 命令 | 是否需要用户确认 |
+|---|---|---|
+| 放弃进行中的 merge | `git merge --abort` | 否 |
+| 放弃进行中的 rebase | `git rebase --abort` | 否 |
+| 从 commit 创建新分支 | `git branch <new> <commit>` | 否 |
+| 撤销 merge commit | `git reset --hard HEAD~1` | 是 |
+| 重置当前分支到另一个分支 | `git reset --hard <branch>` | 是 |
+| 强制删本地分支 | `git branch -D <branch>` | 是 |
 
 ## Tag 与 Release
 
-### Tag 命名
+### 本质区别
 
-Tag：`v<上游版本>-fork.<NNNN>`（序号固定 4 位，不足补零）
+| | Tag | Release |
+|---|---|---|
+| 作用 | 给代码“打坐标”，标记版本点 | 给人看的“发布页” |
+| 面向 | 机器（Go / npm / Maven / CI） | 人（changelog、下载） |
+| 内容 | 纯指针，指向某个 commit | 绑定一个 tag + 说明 + 产物 |
+| 依赖解析 | Go / npm / Maven 只认 tag | 完全不参与依赖解析 |
+| 命名约束 | 必须符合 semver 规则 | 完全自由 |
+
+**Release = Tag + 说明书**
+
+- Release 必须绑定一个 Tag，Tag 不依赖 Release（可以只有 tag，没有 release）
+- 两者不需要完全一致——tag 是版本编号，release 是版本说明书
+
+### Tag 命名（严格）
+
+Tag：`v<上游版本>-fork.<YYYYMMDDHHmmss>`
 
 | Tag | 含义 |
 |---|---|
-| `v4.1.8-fork.0001` | 基于上游 v4.1.8 的第一次 fork 发布 |
-| `v4.1.8-fork.0002` | 基于上游 v4.1.8 的第二次 fork 发布 |
+| `v4.1.8-fork.20260101143020` | 基于上游 v4.1.8，2026-01-01 14:30:20 发布 |
+| `v4.1.8-fork.20260115091500` | 基于上游 v4.1.8，2026-01-15 09:15:00 发布 |
 
-- 基于上游版本号 + `-fork` 后缀 + 4 位零填充序号，确保按字母排序即为时间顺序
-- 非零填充序号（`v4.1.8-fork.10`）在字母排序下会排在 `fork.1` 和 `fork.2` 之间，不要使用
+- 格式：上游版本 + `-fork` + `YYYYMMDDHHmmss`
+- 日期时间合成一个数字标识符，避免 `HHmmss` 出现前导零导致 semver 非法
+- 按字母序 = 按时间序，Go semver 兼容
 - 不会和上游 tag 冲突
 
-### Release 命名
+### Release 命名（自由）
 
-Release：`Fork v<四段版本> - <核心改动>`
+推荐格式：`Fork v<上游版本> - <核心改动>`
 
 | Release | 含义 |
 |---|---|
-| `Fork v4.1.8.1 - Use error type fix + Priority lock` | 第一次 fork 发布，包含两个改动 |
-| `Fork v4.1.8.2 - Add connection retry logic` | 第二次 fork 发布，单个改动 |
+| `Fork v4.1.8 - Use error type fix + Priority lock` | 包含两个改动 |
+| `Fork v4.1.8 - Add connection retry logic` | 单个改动 |
 
-- 四段版本号 `v4.1.8.1` 表示 fork 的 patch 序号
-- 后面跟本次发布的核心改动摘要
-- 建议用 `gh` 代替 `git push` 创建 tag，避免 HTTPS 网络问题
+标题可以写成任何人类可读的形式，不影响任何依赖解析。
 
 ### 推送 tag
 
 ```bash
-# 本地打 tag
-git tag v4.1.8-fork.0001
+# 本地打 tag（自动取当前时间）
+git tag v4.1.8-fork.$(date +%Y%m%d%H%M%S)
 
 # 用 gh 推送（绕过 HTTPS 超时问题）
-gh release create v4.1.8-fork.0001 \
-  --repo <your-fork> \
+gh release create <tag> \
+  --repo <owner/repo> \
   --title "Fork v4.1.8 - <改动摘要>" \
   --notes ""
 ```
