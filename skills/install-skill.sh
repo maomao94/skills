@@ -6,9 +6,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+USER_LEVEL_TOOLS=(opencode qoder)
+PROJECT_LEVEL_TOOLS=(opencode qoder cursor claude-code codex gemini-cli)
+
 show_help() {
   cat <<HELP
 Usage: $0 --skill <skill-name> --tool <tool> [--source <path>] [--project <path>] [--link|--copy] [--uninstall] [--status]
+       $0 --all-skills --tool <tool> [--project <path>] [--link|--copy] [--uninstall] [--status]
+       $0 --all-skills --all-tools [--project <path>] [--link|--copy] [--uninstall] [--status]
 
 Install a skill into an AI editor skill directory.
 
@@ -23,9 +28,12 @@ Tools (project-level, require --project):
   gemini-cli   <project>/.gemini/commands/<skill>
 
 Options:
-  --skill <name>      Required skill name (ignored with --list).
-  --tool <tool>       Target tool (ignored with --list).
+  --skill <name>      Skill name (ignored with --list, mutually exclusive with --all-skills).
+  --all-skills        Apply the action to every skill in this repository.
+  --tool <tool>       Target tool (ignored with --list, mutually exclusive with --all-tools).
+  --all-tools         Apply the action to all supported tools.
   --source <path>     Source directory containing the skill. Default: skills/<skill-name>
+                       Not supported with --all-skills.
   --project <path>    Project root for project-level installs.
                        Required for cursor, claude-code, codex, gemini-cli.
                        Optional for opencode and qoder.
@@ -44,6 +52,8 @@ Examples:
   $0 --skill caveman --tool gemini-cli --project /path/to/project
   $0 --skill caveman --tool opencode --status
   $0 --skill caveman --tool opencode --uninstall
+  $0 --all-skills --tool opencode
+  $0 --all-skills --all-tools --project /path/to/project
   $0 --list
 HELP
 }
@@ -223,6 +233,61 @@ list_skills() {
   fi
 }
 
+available_skills() {
+  local skills_dir="$SCRIPT_DIR"
+  local skill_dir skill_name
+  for skill_dir in "$skills_dir"/*/; do
+    [ -d "$skill_dir" ] || continue
+    skill_name="$(basename "$skill_dir")"
+    if [ -f "$skill_dir/SKILL.md" ]; then
+      printf '%s\n' "$skill_name"
+    fi
+  done
+}
+
+tools_for_request() {
+  local all_tools="$1"
+  local tool="$2"
+  local project="$3"
+
+  if [ "$all_tools" = true ]; then
+    if [ -n "$project" ]; then
+      printf '%s\n' "${PROJECT_LEVEL_TOOLS[@]}"
+    else
+      printf '%s\n' "${USER_LEVEL_TOOLS[@]}"
+    fi
+  else
+    printf '%s\n' "$tool"
+  fi
+}
+
+run_action() {
+  local skill="$1"
+  local tool="$2"
+  local source="$3"
+  local project="$4"
+  local use_copy="$5"
+  local uninstall="$6"
+  local status="$7"
+
+  local source_dir target_dir
+  if [ "$uninstall" = false ]; then
+    source_dir="$(resolve_source_dir "$skill" "$source")"
+  else
+    source_dir=''
+  fi
+
+  target_dir="$(target_dir_for "$tool" "$skill" "$project")"
+
+  if [ "$status" = true ]; then
+    check_status "$target_dir" "$skill"
+  elif [ "$uninstall" = true ]; then
+    uninstall_skill "$target_dir" "$skill"
+  else
+    install_skill "$source_dir" "$target_dir" "$use_copy" "$skill"
+  fi
+}
+
 main() {
   local skill=''
   local tool=''
@@ -232,6 +297,8 @@ main() {
   local uninstall=false
   local status=false
   local list=false
+  local all_skills=false
+  local all_tools=false
 
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -240,10 +307,18 @@ main() {
         [ -n "$skill" ] || error '--skill requires a value'
         shift 2
         ;;
+      --all-skills)
+        all_skills=true
+        shift
+        ;;
       --tool)
         tool="${2:-}"
         [ -n "$tool" ] || error '--tool requires a value'
         shift 2
+        ;;
+      --all-tools)
+        all_tools=true
+        shift
         ;;
       --source)
         source="${2:-}"
@@ -290,25 +365,40 @@ main() {
     exit 0
   fi
 
-  [ -n "$skill" ] || error '--skill is required (use --list to see available skills)'
-  [ -n "$tool" ] || error '--tool is required (supported: opencode, qoder, cursor, claude-code, codex, gemini-cli)'
-
-  # Resolve source directory
-  local source_dir
-  source_dir="$(resolve_source_dir "$skill" "$source")"
-
-  # Determine target directory
-  local target_dir
-  target_dir="$(target_dir_for "$tool" "$skill" "$project")"
-
-  # Execute action
-  if [ "$status" = true ]; then
-    check_status "$target_dir" "$skill"
-  elif [ "$uninstall" = true ]; then
-    uninstall_skill "$target_dir" "$skill"
-  else
-    install_skill "$source_dir" "$target_dir" "$use_copy" "$skill"
+  if [ "$all_skills" = true ] && [ -n "$skill" ]; then
+    error '--skill and --all-skills are mutually exclusive'
   fi
+  if [ "$all_tools" = true ] && [ -n "$tool" ]; then
+    error '--tool and --all-tools are mutually exclusive'
+  fi
+  if [ "$all_skills" = true ] && [ -n "$source" ]; then
+    error '--source is not supported with --all-skills'
+  fi
+
+  [ "$all_skills" = true ] || [ -n "$skill" ] || error '--skill is required unless --all-skills is used (use --list to see available skills)'
+  [ "$all_tools" = true ] || [ -n "$tool" ] || error '--tool is required unless --all-tools is used (supported: opencode, qoder, cursor, claude-code, codex, gemini-cli)'
+
+  local skills=()
+  local tools=()
+  local item
+
+  if [ "$all_skills" = true ]; then
+    while IFS= read -r item; do
+      skills+=("$item")
+    done < <(available_skills)
+  else
+    skills+=("$skill")
+  fi
+
+  while IFS= read -r item; do
+    tools+=("$item")
+  done < <(tools_for_request "$all_tools" "$tool" "$project")
+
+  for tool in "${tools[@]}"; do
+    for skill in "${skills[@]}"; do
+      run_action "$skill" "$tool" "$source" "$project" "$use_copy" "$uninstall" "$status"
+    done
+  done
 }
 
 main "$@"
