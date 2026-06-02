@@ -19,6 +19,7 @@ description: Fork 仓库协作规范：PR 分支命名、职责隔离、合并�
 - 提 PR 时优先保护 PR 分支纯净：一个功能、一个分支、不要混入其他 PR 改动
 - 发布 fork 版本时，Tag 是机器使用的版本坐标，Release 是人看的说明页
 - Go 项目必须优先保证 tag 符合 semver；release 标题不参与 Go modules 解析
+- Release notes 必须用真实 Markdown 换行；不要把包含字面量 `\n` 的字符串直接传给 `gh release create --notes`
 - 如果用户混淆 tag 和 release，先解释两者关系，再给具体命名和命令
 
 ## 分支命名
@@ -113,8 +114,19 @@ Tag：`v<上游版本>-fork.<YYYYMMDDHHmmss>`
 git tag v4.1.8-fork.$(date +%Y%m%d%H%M%S)
 
 # 用 gh 推送（绕过 HTTPS 超时问题）
+RELEASE_NOTES=$(cat <<'EOF'
+Fork release based on upstream v4.1.8.
+
+Included changes:
+- <改动 1>
+- <改动 2>
+
+Commit: <commit-sha>
+EOF
+)
+
 gh release create <tag> \
   --repo <owner/repo> \
   --title "Fork v4.1.8 - <改动摘要>" \
-  --notes ""
+  --notes "$RELEASE_NOTES"
 ```
