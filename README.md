@@ -6,7 +6,7 @@
 
 这是一个面向个人工作流的技能包仓库。它把多个 AI 编辑器使用的技能放在同一个 git 仓库里维护，通过 symlink/copy 安装到各编辑器原生目录，让一次仓库更新可以同步到 OpenCode、Qoder、Cursor、Claude Code、Codex、Gemini CLI 等工具。
 
-当前技能覆盖三类核心场景：技能安装规则、GitHub fork 协作规范、AI 子智能体委派通知。
+当前技能覆盖三类核心场景：技能安装规则、GitHub 协作与发布规范、AI 子智能体委派通知。
 
 ## 核心功能
 
@@ -14,7 +14,7 @@
 - **一次维护，多端安装**：所有技能在一个 git 仓库维护，可批量安装到一个或多个 AI 编辑器
 - **Agent 调度可见性**：在调用子 agent / 后台任务前显式说明委派对象、目的和预期，并在终端回收结果时提示
 - **技能安装规范**：统一 OpenCode、Qoder、Cursor、Claude Code、Codex、Gemini CLI 等工具的原生目录和 copy/symlink 策略
-- **Fork 协作规范**：规范 fork 仓库 PR 分支、本地集成分支、tag 和 release 命名
+- **GitHub 协作与发布规范**：规范 PR 分支、本地集成分支、主项目与 fork 项目的 tag/release 命名
 
 ## AI Tool Skills
 
@@ -32,7 +32,7 @@ Current skill packages:
 | Skill | Purpose |
 |-------|---------|
 | [agent-delegation-visibility](skills/agent-delegation-visibility/SKILL.md) | Make sub-agent delegation visible before `task()` / background agent calls. |
-| [github-fork-pr](skills/github-fork-pr/SKILL.md) | Standardize fork repository PR branches, local integration branches, and tag/release naming. |
+| [github-fork-pr](skills/github-fork-pr/SKILL.md) | Standardize GitHub PR branches, local integration branches, and main/fork tag/release naming. |
 | [skill-installation-guide](skills/skill-installation-guide/SKILL.md) | Standardize skill installation directories and copy/symlink strategy across AI editors. |
 
 ### Installation
